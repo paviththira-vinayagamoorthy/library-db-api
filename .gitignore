@@ -1,0 +1,26 @@
+# Python Virtual Environment
+venv/
+ENV/
+env/
+
+# Environment Variables & Secrets (Security)
+.env
+.env.local
+
+# Python Byte-compiled / Cache Files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database Files (Local SQLite/Testing DBs)
+*.db
+*.sqlite3
+
+# IDE / Code Editor Settings
+.vscode/
+.idea/
+*.swp
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
