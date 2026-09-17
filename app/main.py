@@ -1,44 +1,36 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from app.database.connection import engine, Base  # அல்லது app.database.database
 
-# Database மற்றும் Models
-from app.database.connection import engine, Base
-import app.models
+# Models
+from app.models.author import Author
+from app.models.category import Category
+from app.models.book import Book
+from app.models.member import Member
+from app.models.borrow import Borrow
+from app.models.user import User  # app. சேர்த்துள்ளோம்
 
-# Routers Import
-from app.routers.authors import router as author_router
-from app.routers.categories import router as category_router
-from app.routers.books import router as book_router
-from app.routers.members import router as member_router
-from app.routers.borrows import router as borrow_router
-from app.routers.stats import router as stat_router
+# Routers
+from app.routers.authors import router as authors_router
+from app.routers.categories import router as categories_router
+from app.routers.books import router as books_router
+from app.routers.members import router as members_router
+from app.routers.borrows import router as borrows_router
+from app.routers.stats import router as stats_router
+from app.routers.auth import router as auth_router  # app. சேர்த்துள்ளோம்
 
-# Table Creation in MySQL
+# Create Tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Library Management API"
+    title="Library Management API",
+    version="1.0.0"
 )
 
-# React CORS Permission
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React app address
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Include All Routers
-app.include_router(author_router)
-app.include_router(category_router)
-app.include_router(book_router)
-app.include_router(member_router)
-app.include_router(borrow_router)
-app.include_router(stat_router)
-
-@app.get("/")
-def home():
-    return {
-        "message": "Library Management API is running successfully!"
-    }
+# Include Routers
+app.include_router(auth_router)
+app.include_router(authors_router)
+app.include_router(categories_router)
+app.include_router(books_router)
+app.include_router(members_router)
+app.include_router(borrows_router)
+app.include_router(stats_router)
