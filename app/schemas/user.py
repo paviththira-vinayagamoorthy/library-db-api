@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -25,6 +24,9 @@ class UserRegister(BaseModel):
         min_length=8,
         max_length=128
     )
+
+    # Postman-ல் role அனுப்பினால் அதை எடுக்கும், இல்லையென்றால் default-ஆக "member" எனச் சேமிக்கும்
+    role: str = Field(default="member")
 
 
 class UserResponse(BaseModel):

@@ -20,7 +20,6 @@ from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from sqlalchemy.orm import Session
 
-# Corrected Imports
 from app.config import settings
 from app.database.connection import get_db
 from app.models.user import User
@@ -157,12 +156,13 @@ def get_current_user(
     return user
 
 
+# 🔴 Admin-க்கு மட்டும் (Case-insensitive check)
 def require_admin(
     current_user: User = Depends(
         get_current_user
     )
 ):
-    if current_user.role != "Admin":
+    if current_user.role.lower() != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
@@ -171,18 +171,25 @@ def require_admin(
     return current_user
 
 
+# 🔴 Admin மற்றும் Librarian இருவருக்குமான Access ( require_librarian / require_staff_or_admin )
+def require_staff_or_admin(
+    current_user: User = Depends(
+        get_current_user
+    )
+):
+    if current_user.role.lower() not in ["admin", "librarian"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin or Librarian access required"
+        )
+
+    return current_user
+
+
+# 🔴 ImportError தவிர்க்க require_librarian என்ற பெயரையும் இணைத்துள்ளோம்:
 def require_librarian(
     current_user: User = Depends(
         get_current_user
     )
 ):
-    if current_user.role not in [
-        "Admin",
-        "Librarian"
-    ]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Librarian access required"
-        )
-
-    return current_user
+    return require_staff_or_admin(current_user)

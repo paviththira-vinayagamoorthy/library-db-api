@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.database.connection import engine, Base  # அல்லது app.database.database
+from fastapi.middleware.cors import CORSMiddleware
 
 # Models
 from app.models.author import Author
@@ -16,7 +17,7 @@ from app.routers.books import router as books_router
 from app.routers.members import router as members_router
 from app.routers.borrows import router as borrows_router
 from app.routers.stats import router as stats_router
-from app.routers.auth import router as auth_router  # app. சேர்த்துள்ளோம்
+from app.routers.auth import router as auth_router  
 
 # Create Tables
 Base.metadata.create_all(bind=engine)
@@ -24,6 +25,14 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Library Management API",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Production-il specific domain kudukkalame
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include Routers

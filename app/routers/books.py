@@ -4,13 +4,15 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.models.book import Book
 from app.schemas.book import BookCreate, BookUpdate, BookResponse, StockUpdate
+# 1. Auth Dependencies-ஐ இறக்குமதி செய்யவும்
+from app.auth.security import require_librarian, require_admin
 
 router = APIRouter(
     prefix="/books",
     tags=["Books"]
 )
 
-# Get books with search, filters, sorting & pagination
+# Get books - அனைவரும் பார்க்கலாம் (No Auth Required)
 @router.get("/", response_model=list[BookResponse])
 def get_books(
     category_id: int | None = None,
@@ -47,7 +49,7 @@ def get_books(
     offset = (page - 1) * limit
     return query.offset(offset).limit(limit).all()
 
-# Get book by ID
+# Get book by ID - அனைவரும் பார்க்கலாம்
 @router.get("/{book_id}", response_model=BookResponse)
 def get_book(book_id: int, db: Session = Depends(get_db)):
     book = db.query(Book).filter(Book.id == book_id).first()
@@ -55,9 +57,13 @@ def get_book(book_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Book not found")
     return book
 
-# Create book
+# Create book - Librarian அல்லது Admin மட்டுமே செய்ய முடியும்
 @router.post("/", response_model=BookResponse, status_code=status.HTTP_201_CREATED)
-def create_book(book: BookCreate, db: Session = Depends(get_db)):
+def create_book(
+    book: BookCreate, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_librarian) # 👈 Protection சேர்க்கப்பட்டது
+):
     new_book = Book(
         title=book.title,
         price=book.price,
@@ -71,9 +77,14 @@ def create_book(book: BookCreate, db: Session = Depends(get_db)):
     db.refresh(new_book)
     return new_book
 
-# Update book details
+# Update book - Librarian அல்லது Admin மட்டுமே செய்ய முடியும்
 @router.put("/{book_id}", response_model=BookResponse)
-def update_book(book_id: int, book_update: BookUpdate, db: Session = Depends(get_db)):
+def update_book(
+    book_id: int, 
+    book_update: BookUpdate, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_librarian) # 👈 Protection சேர்க்கப்பட்டது
+):
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -87,9 +98,14 @@ def update_book(book_id: int, book_update: BookUpdate, db: Session = Depends(get
     db.refresh(book)
     return book
 
-# Stock Management endpoint
+# Stock Management - Librarian அல்லது Admin மட்டுமே செய்ய முடியும்
 @router.patch("/{book_id}/stock", response_model=BookResponse)
-def update_stock(book_id: int, stock_data: StockUpdate, db: Session = Depends(get_db)):
+def update_stock(
+    book_id: int, 
+    stock_data: StockUpdate, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_librarian) # 👈 Protection சேர்க்கப்பட்டது
+):
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -100,9 +116,13 @@ def update_stock(book_id: int, stock_data: StockUpdate, db: Session = Depends(ge
     db.refresh(book)
     return book
 
-# Delete book
+# Delete book - Admin மட்டுமே செய்ய முடியும்
 @router.delete("/{book_id}")
-def delete_book(book_id: int, db: Session = Depends(get_db)):
+def delete_book(
+    book_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin) # 👈 Admin Protection சேர்க்கப்பட்டது
+):
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
